@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SGX Bolines // Arcade Core</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #050508; font-family: 'Share Tech Mono', monospace; color: #FDCC0D; user-select: none; height: 100vh; width: 100vw; }
+        
+        /* SISTEMAS GLOBALES */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.3s; background: rgba(5,5,8,0.85); overflow: hidden; }
+        .hidden { display: none !important; }
+        
+        /* GLITCH TEXT EFFECT */
+        .glitch { position: relative; font-size: 56px; margin: 0 0 20px 0; font-weight: bold; text-transform: uppercase; text-shadow: 0 0 10px #FDCC0D; letter-spacing: 4px; }
+        .glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; }
+        .glitch::before { left: 2px; text-shadow: -2px 0 #00FFFF; clip: rect(24px, 550px, 90px, 0); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+        .glitch::after { left: -2px; text-shadow: -2px 0 #FF0055; clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2.5s infinite linear alternate-reverse; }
+        
+        @keyframes glitch-anim {
+            0% { clip: rect(11px, 9999px, 94px, 0); transform: skew(0.65deg); }
+            5% { clip: rect(72px, 9999px, 86px, 0); transform: skew(0.1deg); }
+            10% { clip: rect(31px, 9999px, 92px, 0); transform: skew(0.25deg); }
+            15% { clip: rect(89px, 9999px, 14px, 0); transform: skew(0.3deg); }
+            20% { clip: rect(10px, 9999px, 56px, 0); transform: skew(0.9deg); }
+            100% { clip: rect(62px, 9999px, 4px, 0); transform: skew(0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); transform: skew(0.8deg); }
+            5% { clip: rect(52px, 9999px, 74px, 0); transform: skew(0.2deg); }
+            10% { clip: rect(79px, 9999px, 85px, 0); transform: skew(0.5deg); }
+            15% { clip: rect(75px, 9999px, 5px, 0); transform: skew(0.1deg); }
+            20% { clip: rect(62px, 9999px, 20px, 0); transform: skew(0.6deg); }
+            100% { clip: rect(31px, 9999px, 12px, 0); transform: skew(0); }
+        }
+
+        h2 { color: #00FFFF; text-shadow: 0 0 10px #00FFFF; margin: 0 0 15px 0; font-size: 20px; font-weight: bold; text-transform: uppercase; }
+        p { margin: 3px 0; font-size: 14px; }
+        
+        .highlight { color: #fff; font-weight: bold; }
+        .copper { color: #B87333; text-shadow: 0 0 10px #B87333; }
+        
+        /* 45 DEGREE CUT BUTTONS (CYBERPUNK) */
+        button { 
+            background: rgba(50, 82, 123, 0.4); color: #FDCC0D; 
+            border: none; border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D;
+            padding: 12px 24px; font-family: 'Share Tech Mono', monospace; font-size: 16px; 
+            cursor: pointer; text-transform: uppercase; font-weight: bold; transition: all 0.2s; 
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            backdrop-filter: blur(4px); margin: 5px; box-shadow: inset 0 0 10px rgba(253, 204, 13, 0.2);
+        }
+        button:hover { background: rgba(253, 204, 13, 0.2); color: #fff; box-shadow: inset 0 0 20px rgba(253, 204, 13, 0.5), 0 0 15px rgba(253, 204, 13, 0.4); border-color: #fff; }
+
+        /* HEADER & INFO BUTTON */
+        .header-container { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; max-width: 800px; margin-bottom: 10px; }
+        
+        #info-btn { 
+            position: absolute; right: 0; top: 15px; background: rgba(0,255,255,0.1); border-left: 2px solid #00FFFF; border-right: 2px solid #00FFFF; color: #00FFFF; 
+            padding: 8px 12px; font-size: 18px; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+        #info-btn:hover { background: rgba(0,255,255,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.5); }
+
+        /* MODAL DE INFORMACIÓN */
+        #info-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 600px; background: rgba(5,5,8,0.95); border-left: 4px solid #00FFFF; border-right: 4px solid #00FFFF; padding: 25px; z-index: 1000; box-shadow: 0 0 40px rgba(0, 255, 255, 0.2); flex-direction: column; align-items: center; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
+        .instructions-content { text-align: left; margin-bottom: 20px; color: #eee; }
+        .instructions-content p { font-size: 15px; margin-bottom: 12px; line-height: 1.4; border-bottom: 1px solid rgba(50, 82, 123, 0.3); padding-bottom: 8px; }
+        .instructions-content b { color: #FDCC0D; }
+
+        /* MENU SCREEN - GRID */
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+        .marble-card { background: rgba(26, 42, 58, 0.6); border-left: 2px solid #32527B; border-right: 2px solid #32527B; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; width: 100px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+        .marble-card.selected { border-color: #00FFFF; background: rgba(0, 255, 255, 0.15); box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.3); }
+        .marble-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #fff; border: 2px solid #32527B; pointer-events: none; }
+        .marble-card span { display: block; margin-top: 6px; font-size: 12px; font-weight: bold; color: #fff; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* HUD SCREEN (IN-GAME) */
+        #hud-screen { background: transparent; justify-content: space-between; align-items: flex-start; padding: 20px; box-sizing: border-box; pointer-events: none; flex-direction: row; }
+        .panel { background: rgba(5, 5, 8, 0.8); border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D; padding: 15px; backdrop-filter: blur(6px); pointer-events: auto; min-width: 240px; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
+        
+        #abort-btn { pointer-events: auto; border-color: #FF0055; color: #FF0055; background: rgba(255,0,85,0.1); margin-top: 10px; font-size: 14px; padding: 8px 16px; }
+        #abort-btn:hover { background: rgba(255,0,85,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(255, 0, 85, 0.5); border-color: #fff; }
+
+        /* END SCREEN */
+        .stats-box { background: rgba(5, 5, 8, 0.9); border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D; padding: 25px; text-align: left; margin-bottom: 25px; font-size: 16px; width: 320px; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
+        .stats-box p { margin: 10px 0; display: flex; justify-content: space-between; border-bottom: 1px dotted #32527B; padding-bottom: 5px; }
+        .stats-box span { font-weight: bold; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="info-modal" class="hidden" style="display: none;">
+        <h2 style="text-align: center; margin-bottom: 15px;">MANUAL TÁCTICO</h2>
+        <div class="instructions-content">
+            <p>1. <b>CÁMARA ORBITAL:</b> Arrastra el fondo para rotar el mapa 360º.</p>
+            <p>2. <b>TIRO SLINGSHOT:</b> Clic sostenido sobre tu bolín y arrastra en dirección contraria para generar tensión.</p>
+            <p>3. <b>HP & DAÑO:</b> Enemigos tienen de 1 a 3 HP. Impactos restan energía.</p>
+            <p>4. <b>REACCIÓN EN CADENA:</b> Choques elásticos desplazan bolines creando carambolas masivas.</p>
+            <p>5. <b>OVERKILL (METRALLA):</b> Bolines eliminados (0 HP) se inestabilizan por 1.5s antes de explotar, destrozando todo a su paso.</p>
+        </div>
+        <button onclick="toggleInfo()" style="border-color: #00FFFF; color: #00FFFF; background: rgba(0,255,255,0.1); width: 100%;">[ OK ] ENTER</button>
+    </div>
+
+    <div id="menu-screen" class="screen">
+        <div class="header-container">
+            <h1 class="glitch" data-text="SGX BOLINES">SGX BOLINES</h1>
+            <button id="info-btn" onclick="toggleInfo()">[ i ]</button>
+        </div>
+        
+        <h2>ESCOGE TU BOLÍN</h2>
+        <div class="grid-container" id="marble-grid"></div>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+            <button onclick="Game.startGame('SOLO')" style="font-size: 16px; padding: 12px 30px;">[ INICIAR CAOS ]</button>
+            <button onclick="Game.startGame('PVP')" style="font-size: 16px; padding: 12px 30px; border-color: #B87333; color: #B87333; background: rgba(184, 115, 51, 0.1);">[ INICIAR PVP ]</button>
+        </div>
+    </div>
+
+    <div id="hud-screen" class="screen hidden">
+        <div class="panel">
+            <h1 style="font-size: 22px; text-align: left; margin-bottom: 8px;">SGX <span id="hud-mode" class="highlight">SOLO</span></h1>
+            <p style="font-size: 14px; color: #00FFFF;">ESTADO: <span id="hud-state" style="color: #fff;">ESPERANDO</span></p>
+            <hr style="border-color: #32527B; margin: 10px 0;">
+            <div id="hud-solo-stats">
+                <p>TIROS: <span id="hud-shots" class="highlight">10</span></p>
+                <p>ENEMIGOS: <span id="hud-targets" style="color:#FDCC0D;">0</span></p>
+            </div>
+            <div id="hud-pvp-stats" class="hidden">
+                <p>TURNO: <span id="hud-turn" class="highlight">P1</span></p>
+                <p>SCORE P1: <span id="hud-score-p1" class="highlight">0</span></p>
+                <p>SCORE P2: <span id="hud-score-p2" class="copper">0</span></p>
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <button id="info-btn" onclick="toggleInfo()" style="position: relative; right: 0; top: 0; margin-bottom: 10px;">[ i ]</button>
+            <button id="abort-btn" onclick="Game.showMenu()">⏏ ABORT</button>
+        </div>
+    </div>
+
+    <div id="end-screen" class="screen hidden">
+        <h1 id="end-title" class="glitch" data-text="MISSION CLEARED" style="font-size: 50px;">MISSION CLEARED</h1>
+        <h2 id="end-subtitle" style="margin-bottom: 20px; color:#fff;">SIMULACIÓN COMPLETADA</h2>
+        <div class="stats-box" id="stats-container"></div>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="Game.startGame(Game.mode)">[ REINTENTAR ]</button>
+            <button onclick="Game.showMenu()" style="border-color: #888; color: #888; background: rgba(136,136,136,0.1);">[ MAIN MENU ]</button>
+        </div>
+    </div>
+
+<script>
+// --- CONTROL MODAL ---
+function toggleInfo() {
+    const modal = document.getElementById('info-modal');
+    if (modal.style.display === 'none' || modal.classList.contains('hidden')) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    } else {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+}
+
+// --- CONFIG SGX ---
+const SGX = { Blue: 0x32527B, Yellow: 0xFDCC0D, Copper: 0xB87333, Dark: 0x050508 };
+const MARBLE_TEXTURES = [
+    { id: 0, name: "Lx Musx", url: "https://static.wixstatic.com/media/fe81a7_8e633cf8bcb3446d9b4cbe133dfcbce1~mv2.png" },
+    { id: 1, name: "Roelephantom", url: "https://static.wixstatic.com/media/fe81a7_92284537ab6d4d85b7f0143599e927a8~mv2.png" },
+    { id: 2, name: "Roots Disorder", url: "https://static.wixstatic.com/media/fe81a7_50a00e8777db48eaa8ccac45f762a408~mv2.png" },
+    { id: 3, name: "Dark Cupcake", url: "https://static.wixstatic.com/media/fe81a7_57282853d2e74770ba081e88b6fe01fa~mv2.png" },
+    { id: 4, name: "The Highgineer", url: "https://static.wixstatic.com/media/fe81a7_a5474248be1d408eb59d4a90872ecd2a~mv2.png" },
+    { id: 5, name: "Kstillo", url: "https://static.wixstatic.com/media/fe81a7_c2420b5aecb246ad9d3af8266aeebfd5~mv2.png" }
+];
+
+let selectedTextureUrl = MARBLE_TEXTURES[4].url; 
+const textureLoader = new THREE.TextureLoader();
+textureLoader.setCrossOrigin('anonymous');
+
+// --- UI LOGIC ---
+function buildMenu() {
+    const grid = document.getElementById('marble-grid');
+    grid.innerHTML = '';
+    MARBLE_TEXTURES.forEach((tex) => {
+        const card = document.createElement('div');
+        card.className = `marble-card ${tex.url === selectedTextureUrl ? 'selected' : ''}`;
+        card.innerHTML = `<img src="${tex.url}" alt="${tex.name}"><span>${tex.name}</span>`;
+        card.onclick = () => {
+            document.querySelectorAll('.marble-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedTextureUrl = tex.url;
+        };
+        grid.appendChild(card);
+    });
+}
+buildMenu();
+
+function switchScreen(screenId) {
+    ['menu-screen', 'hud-screen', 'end-screen'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById(screenId).classList.remove('hidden');
+}
+
+// --- CORE 3D ENGINE ---
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(SGX.Dark, 0.0015); 
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 5000);
+camera.position.set(0, 220, 200);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(SGX.Dark);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.maxPolarAngle = Math.PI / 2 - 0.05; 
+controls.enabled = false; 
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
+scene.add(ambientLight);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.8); 
+scene.add(hemiLight);
+const spotLight = new THREE.SpotLight(0xffffff, 0.8);
+spotLight.position.set(100, 300, 100);
+scene.add(spotLight);
+
+const grid = new THREE.GridHelper(4000, 200, SGX.Blue, 0x0a1525);
+grid.position.y = -0.5;
+scene.add(grid);
+
+// UTILIDAD PARA SPRITES DESACOPLADOS (No giran con la malla)
+function makeTextSprite(message, color = '#ffffff', scale = 12) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.shadowColor = "rgba(0,0,0,0.8)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    ctx.fillStyle = color;
+    ctx.font = 'bold 70px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(message, 64, 64);
+    const tex = new THREE.CanvasTexture(canvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }); // depthTest false hace que siempre se vea por encima
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(scale, scale, 1);
+    return { sprite, tex, ctx };
+}
+
+// --- CLASES FÍSICAS ---
+class MathWall {
+    constructor(x1, z1, x2, z2) {
+        this.p1 = new THREE.Vector2(x1, z1);
+        this.p2 = new THREE.Vector2(x2, z2);
+        let dx = x2 - x1, dz = z2 - z1;
+        this.normal = new THREE.Vector2(-dz, dx).normalize();
+        
+        let length = this.p1.distanceTo(this.p2);
+        let angle = Math.atan2(dz, dx);
+        
+        let geo = new THREE.BoxGeometry(length, 15, 4);
+        let mat = new THREE.MeshStandardMaterial({ 
+            color: 0x000000, 
+            emissive: SGX.Yellow, 
+            emissiveIntensity: 0.9, 
+            wireframe: true 
+        });
+        
+        this.mesh = new THREE.Mesh(geo, mat);
+        this.mesh.position.set((x1+x2)/2, 7.5, (z1+z2)/2);
+        this.mesh.rotation.y = -angle; 
+        scene.add(this.mesh);
+    }
+}
+
+class Marble {
+    constructor(x, z, type, textureUrl = null) {
+        this.radius = 3; 
+        this.pos = new THREE.Vector2(x, z);
+        this.vel = new THREE.Vector2(0, 0);
+        this.type = type; 
+        this.active = true;
+        this.isDying = false;
+        this.deathTimer = 0;
+        
+        let matConfig = { roughness: 0.0, metalness: 0.0, wireframe: false }; 
+        
+        if (type.includes('P')) {
+            matConfig.color = 0xffffff; 
+            matConfig.map = textureLoader.load(textureUrl);
+            
+            // Etiqueta P1/P2 Desacoplada
+            let lblColor = type === 'P1' ? '#FDCC0D' : '#B87333';
+            this.labelData = makeTextSprite(type, lblColor, 10);
+            scene.add(this.labelData.sprite); // Se añade a la escena, no a la malla
+            
+        } else {
+            this.hp = Math.floor(Math.random() * 3) + 1;
+            matConfig.color = Math.random() * 0xffffff; 
+            matConfig.emissive = 0x000000; 
+            
+            // Etiqueta HP Desacoplada
+            this.labelData = makeTextSprite(this.hp.toString(), '#ffffff', 12);
+            scene.add(this.labelData.sprite); 
+        }
+
+        this.mesh = new THREE.Mesh(new THREE.SphereGeometry(this.radius, 32, 32), new THREE.MeshStandardMaterial(matConfig));
+        this.mesh.position.set(x, this.radius, z);
+        scene.add(this.mesh);
+        
+        // Setup initial label position
+        this.updateLabelPosition();
+    }
+
+    updateLabelPosition() {
+        if(this.labelData && this.labelData.sprite) {
+            this.labelData.sprite.position.x = this.mesh.position.x;
+            this.labelData.sprite.position.y = this.mesh.position.y + 7; // Flotando encima
+            this.labelData.sprite.position.z = this.mesh.position.z;
+        }
+    }
+
+    update(dt) {
+        if(!this.active) return;
+        
+        if(this.isDying) {
+            this.deathTimer -= dt;
+            this.mesh.scale.multiplyScalar(0.98); 
+            this.mesh.material.emissive.setHex(0xFF0000); 
+            this.mesh.material.emissiveIntensity = 2.0;
+            
+            if(this.deathTimer <= 0 || this.mesh.scale.x < 0.2) {
+                this.destroy();
+                return;
+            }
+        }
+
+        this.vel.multiplyScalar(0.985); 
+        if (this.vel.lengthSq() < 0.01) this.vel.set(0, 0);
+
+        this.pos.add(this.vel);
+        this.mesh.position.x = this.pos.x;
+        this.mesh.position.z = this.pos.y;
+        
+        this.updateLabelPosition();
+
+        if (this.vel.lengthSq() > 0.001) {
+            const axis = new THREE.Vector3(this.vel.y, 0, -this.vel.x).normalize();
+            this.mesh.rotateOnWorldAxis(axis, this.vel.length() / this.radius);
+        }
+    }
+
+    takeDamage() {
+        if(!this.active || this.isDying || this.type.includes('P')) return;
+        this.hp--;
+        Game.stats.totalHitsDealt++;
+        
+        if(this.hp <= 0) {
+            this.isDying = true;
+            this.deathTimer = 90; 
+            scene.remove(this.labelData.sprite); // Elimina el número al morir
+        } else {
+            this.labelData.ctx.clearRect(0,0,128,128);
+            this.labelData.ctx.shadowColor = "rgba(0,0,0,0.8)";
+            this.labelData.ctx.shadowBlur = 10;
+            this.labelData.ctx.shadowOffsetX = 2;
+            this.labelData.ctx.shadowOffsetY = 2;
+            this.labelData.ctx.fillStyle = '#ffffff';
+            this.labelData.ctx.fillText(this.hp.toString(), 64, 64);
+            this.labelData.tex.needsUpdate = true;
+            
+            let oldEmissive = this.mesh.material.emissive.getHex();
+            this.mesh.material.emissive.setHex(0xFF0000);
+            this.mesh.material.emissiveIntensity = 1.0;
+            setTimeout(() => { if(this.active && !this.isDying) { this.mesh.material.emissive.setHex(oldEmissive); this.mesh.material.emissiveIntensity = 0.0; } }, 150);
+        }
+    }
+    
+    destroy() {
+        this.active = false;
+        scene.remove(this.mesh);
+        if(this.labelData) scene.remove(this.labelData.sprite);
+        if(this.type === 'TARGET') Game.stats.targetsDestroyed++;
+    }
+}
+
+// --- STATE MACHINE ---
+const Game = {
+    mode: 'SOLO', state: 'MENU', turn: 1, 
+    maxShots: 10, shotsFired: 0, 
+    score: { p1: 0, p2: 0 },
+    stats: { targetsDestroyed: 0, totalHitsDealt: 0, initialTargets: 0 },
+    marbles: [], walls: [], mainBall: null,
+    
+    showMenu() {
+        this.state = 'MENU';
+        controls.enabled = false;
+        document.getElementById('info-modal').style.display = 'none';
+        switchScreen('menu-screen');
+    },
+
+    startGame(mode) {
+        this.mode = mode;
+        this.state = 'IDLE';
+        this.shotsFired = 0;
+        this.score = { p1: 0, p2: 0 };
+        this.turn = 1;
+        this.stats = { targetsDestroyed: 0, totalHitsDealt: 0, initialTargets: 0 };
+        document.getElementById('info-modal').style.display = 'none';
+        
+        switchScreen('hud-screen');
+        controls.enabled = true;
+        
+        this.marbles.forEach(m => m.destroy());
+        this.marbles = [];
+        if(this.walls.length === 0) this.buildArena();
+        
+        if (this.mode === 'SOLO') {
+            document.getElementById('hud-solo-stats').classList.remove('hidden');
+            document.getElementById('hud-pvp-stats').classList.add('hidden');
+            
+            this.mainBall = new Marble(0, 80, 'P1', selectedTextureUrl);
+            this.marbles.push(this.mainBall);
+            
+            this.stats.initialTargets = 10;
+            for(let i=0; i<this.stats.initialTargets; i++) {
+                this.marbles.push(new Marble((Math.random() * 200) - 100, (Math.random() * 160) - 80, 'TARGET'));
+            }
+        } else {
+            document.getElementById('hud-solo-stats').classList.add('hidden');
+            document.getElementById('hud-pvp-stats').classList.remove('hidden');
+            
+            let tex1 = MARBLE_TEXTURES[Math.floor(Math.random() * 6)].url;
+            let tex2 = MARBLE_TEXTURES[Math.floor(Math.random() * 6)].url;
+            
+            let p1 = new Marble(-60, 80, 'P1', tex1);
+            let p2 = new Marble(60, 80, 'P2', tex2); 
+            this.marbles.push(p1, p2);
+            this.mainBall = p1; 
+            
+            this.stats.initialTargets = 12;
+            for(let i=0; i<this.stats.initialTargets; i++) {
+                this.marbles.push(new Marble((Math.random() * 200) - 100, (Math.random() * 160) - 80, 'TARGET'));
+            }
+        }
+        this.updateHUD();
+    },
+
+    buildArena() {
+        const S = 125; const C = 40; 
+        const pts = [ [-S+C, -S], [S-C, -S], [S, -S+C], [S, S-C], [S-C, S], [-S+C, S], [-S, S-C], [-S, -S+C] ];
+        for (let i = 0; i < pts.length; i++) {
+            let next = (i + 1) % pts.length;
+            this.walls.push(new MathWall(pts[i][0], pts[i][1], pts[next][0], pts[next][1]));
+        }
+    },
+
+    updateHUD() {
+        document.getElementById('hud-mode').innerText = this.mode;
+        document.getElementById('hud-state').innerText = this.state;
+        
+        if(this.mode === 'SOLO') {
+            document.getElementById('hud-shots').innerText = (this.maxShots - this.shotsFired);
+            document.getElementById('hud-targets').innerText = this.marbles.filter(m => m.type === 'TARGET' && m.active && !m.isDying).length;
+        } else {
+            document.getElementById('hud-turn').innerText = this.turn === 1 ? "P1" : "P2";
+            document.getElementById('hud-turn').className = this.turn === 1 ? "highlight" : "copper";
+            document.getElementById('hud-score-p1').innerText = this.score.p1;
+            document.getElementById('hud-score-p2').innerText = this.score.p2;
+        }
+    },
+
+    endGame(resultObj) {
+        this.state = 'GAMEOVER';
+        controls.enabled = false;
+        
+        let titleEl = document.getElementById('end-title');
+        titleEl.innerText = resultObj.title;
+        titleEl.setAttribute('data-text', resultObj.title); // Para el Glitch
+        titleEl.style.color = resultObj.color;
+        titleEl.style.textShadow = `0 0 10px ${resultObj.color}`;
+        
+        document.getElementById('end-subtitle').innerText = resultObj.subtitle;
+        
+        let statsHTML = '';
+        if(this.mode === 'SOLO') {
+            let efficiency = this.stats.targetsDestroyed > 0 ? (this.stats.totalHitsDealt / this.shotsFired).toFixed(1) : 0;
+            statsHTML = `
+                <p>Tiros <span>${this.shotsFired} / ${this.maxShots}</span></p>
+                <p>Kills <span>${this.stats.targetsDestroyed} / ${this.stats.initialTargets}</span></p>
+                <p>Impactos <span>${this.stats.totalHitsDealt}</span></p>
+                <p>Combo <span style="color:#00FFFF;">x${efficiency}</span></p>
+            `;
+        } else {
+            statsHTML = `
+                <p style="color:#FDCC0D">Score P1 <span>${this.score.p1}</span></p>
+                <p style="color:#B87333">Score P2 <span>${this.score.p2}</span></p>
+                <p>Impactos <span>${this.stats.totalHitsDealt}</span></p>
+            `;
+        }
+        
+        document.getElementById('stats-container').innerHTML = statsHTML;
+        setTimeout(() => switchScreen('end-screen'), 1000);
+    },
+
+    checkEndTurn() {
+        if(this.state !== 'MOVING') return;
+        
+        if (!this.marbles.some(m => m.active && m.vel.lengthSq() > 0.05)) {
+            this.state = 'IDLE';
+            let activeTargets = this.marbles.filter(m => m.type === 'TARGET' && m.active && !m.isDying).length;
+
+            if (this.mode === 'SOLO') {
+                if (activeTargets === 0) {
+                    this.endGame({ title: "SECTOR LIMPIO", subtitle: "VICTORIA TÁCTICA", color: "#00FFFF" });
+                } else if (this.shotsFired >= this.maxShots) {
+                    this.endGame({ title: "SYSTEM FAILURE", subtitle: "ENERGÍA AGOTADA", color: "#FF0055" });
+                }
+            } else {
+                if (activeTargets === 0) {
+                    let winnerTitle = this.score.p1 > this.score.p2 ? "P1 WINS" : (this.score.p2 > this.score.p1 ? "P2 WINS" : "EMPATE");
+                    let wColor = this.score.p1 > this.score.p2 ? "#FDCC0D" : "#B87333";
+                    this.endGame({ title: winnerTitle, subtitle: "SIMULACIÓN FINALIZADA", color: wColor });
+                } else {
+                    this.turn = this.turn === 1 ? 2 : 1;
+                    this.mainBall = this.marbles.find(m => m.type === (this.turn === 1 ? 'P1' : 'P2'));
+                }
+            }
+            if(this.state !== 'GAMEOVER') this.updateHUD();
+        }
+    }
+};
+
+// --- FÍSICAS OVERKILL ---
+function resolvePhysics() {
+    let actives = Game.marbles.filter(m => m.active);
+    
+    for (let m of actives) {
+        for (let w of Game.walls) {
+            let v1 = new THREE.Vector2().subVectors(m.pos, w.p1);
+            let v2 = new THREE.Vector2().subVectors(w.p2, w.p1);
+            let t = Math.max(0, Math.min(v2.length(), v1.dot(v2.clone().normalize()))); 
+            let closest = new THREE.Vector2().copy(w.p1).add(v2.clone().normalize().multiplyScalar(t));
+            let distVec = new THREE.Vector2().subVectors(m.pos, closest);
+
+            if (distVec.length() < m.radius) {
+                m.pos.add(w.normal.clone().multiplyScalar(m.radius - distVec.length()));
+                let dot = m.vel.dot(w.normal);
+                if(dot < 0) { m.vel.sub(w.normal.clone().multiplyScalar(2 * dot)); m.vel.multiplyScalar(0.85); }
+            }
+        }
+    }
+
+    for (let i = 0; i < actives.length; i++) {
+        for (let j = i + 1; j < actives.length; j++) {
+            let m1 = actives[i], m2 = actives[j];
+            let distVec = new THREE.Vector2().subVectors(m2.pos, m1.pos);
+            let minDist = m1.radius + m2.radius;
+
+            if (distVec.length() < minDist) {
+                let normal = distVec.clone().normalize();
+                let overlap = minDist - distVec.length();
+                
+                m1.pos.sub(normal.clone().multiplyScalar(overlap / 2));
+                m2.pos.add(normal.clone().multiplyScalar(overlap / 2));
+
+                let speed = new THREE.Vector2().subVectors(m1.vel, m2.vel).dot(normal);
+                if (speed < 0) continue; 
+
+                if (speed > 0.15) {
+                    let m2Dying = false, m1Dying = false;
+                    
+                    if (m1.type === 'TARGET' && !m1.isDying) { m1.takeDamage(); m1Dying = m1.isDying; }
+                    if (m2.type === 'TARGET' && !m2.isDying) { m2.takeDamage(); m2Dying = m2.isDying; }
+                    
+                    if(Game.mode === 'PVP') {
+                        if (m1.type.includes('P') && m2Dying) Game.score[m1.type.toLowerCase()]++;
+                        if (m2.type.includes('P') && m1Dying) Game.score[m2.type.toLowerCase()]++;
+                    }
+                    Game.updateHUD();
+                }
+
+                let m1Loss = normal.clone().multiplyScalar(speed * 0.9);
+                let m2Gain = normal.clone().multiplyScalar(speed * 0.9);
+
+                if (m1.type.includes('P') && m2.type === 'TARGET' && m2.isDying) {
+                    m1Loss.multiplyScalar(0.1); 
+                    m2Gain.multiplyScalar(1.5); 
+                } else if (m2.type.includes('P') && m1.type === 'TARGET' && m1.isDying) {
+                    m2Gain.multiplyScalar(0.1); 
+                    m1Loss.multiplyScalar(1.5);
+                }
+
+                m1.vel.sub(m1Loss);
+                m2.vel.add(m2Gain);
+            }
+        }
+    }
+}
+
+// --- INPUT SISTEMA ---
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const planeXZ = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+let aimPoint = new THREE.Vector3();
+let isAiming = false;
+
+const lineMat = new THREE.LineBasicMaterial({ color: SGX.Yellow, transparent: true, opacity: 0.8 });
+const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), lineMat);
+scene.add(line); line.visible = false;
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+    if(e.target.tagName === 'BUTTON' || Game.state !== 'IDLE' || !Game.mainBall) return;
+    
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    
+    let hitbox = new THREE.Sphere(Game.mainBall.mesh.position, Game.mainBall.radius * 3);
+    if (raycaster.ray.intersectsSphere(hitbox)) {
+        isAiming = true;
+        controls.enabled = false; 
+        line.visible = true;
+        Game.state = 'AIMING';
+        Game.updateHUD();
+    }
+});
+
+renderer.domElement.addEventListener('pointermove', (e) => {
+    if (isAiming && Game.mainBall) {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        raycaster.ray.intersectPlane(planeXZ, aimPoint);
+        
+        const start = Game.mainBall.mesh.position.clone();
+        const end = aimPoint.clone(); end.y = start.y;
+        line.geometry.setFromPoints([start, end]);
+    }
+});
+
+renderer.domElement.addEventListener('pointerup', () => {
+    if (isAiming && Game.mainBall) {
+        let force = new THREE.Vector2(aimPoint.x - Game.mainBall.pos.x, aimPoint.z - Game.mainBall.pos.y);
+        force.multiplyScalar(-0.1); 
+        if(force.length() > 6) force.normalize().multiplyScalar(6); 
+        
+        Game.mainBall.vel.add(force);
+        Game.shotsFired++;
+        Game.state = 'MOVING';
+        Game.updateHUD();
+    }
+    isAiming = false;
+    line.visible = false;
+    if(Game.state !== 'GAMEOVER' && Game.state !== 'MENU') controls.enabled = true; 
+});
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+function animate() {
+    requestAnimationFrame(animate);
+    if(Game.state !== 'MENU') {
+        controls.update(); 
+        Game.marbles.forEach(m => m.update(1)); 
+        resolvePhysics();
+        Game.checkEndTurn();
+    }
+    renderer.render(scene, camera);
+}
+
+Game.showMenu(); 
+animate();
+</script>
+</body>
+</html>
