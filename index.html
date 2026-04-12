@@ -2,89 +2,104 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SGX Bolines // Arcade Core</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SGX Bolines // Fluid Arcade Core</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #050508; font-family: 'Share Tech Mono', monospace; color: #FDCC0D; user-select: none; height: 100vh; width: 100vw; }
+        /* RESET & BASE */
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #050508; font-family: 'Share Tech Mono', monospace; color: #FDCC0D; user-select: none; height: 100vh; width: 100vw; touch-action: none; }
         
-        /* SISTEMAS GLOBALES */
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.3s; background: rgba(5,5,8,0.85); overflow: hidden; }
+        /* SISTEMAS GLOBALES (FLUIDOS) */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.3s; background: rgba(5,5,8,0.85); padding: 2vw; }
         .hidden { display: none !important; }
         
-        /* GLITCH TEXT EFFECT */
-        .glitch { position: relative; font-size: 56px; margin: 0 0 20px 0; font-weight: bold; text-transform: uppercase; text-shadow: 0 0 10px #FDCC0D; letter-spacing: 4px; }
+        /* GLITCH TEXT EFFECT - FLUID SCALING */
+        .glitch { position: relative; font-size: clamp(32px, 8vw, 64px); margin: 0 0 clamp(10px, 2vh, 20px) 0; font-weight: bold; text-transform: uppercase; text-shadow: 0 0 10px #FDCC0D; letter-spacing: 4px; text-align: center; line-height: 1; }
         .glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; }
         .glitch::before { left: 2px; text-shadow: -2px 0 #00FFFF; clip: rect(24px, 550px, 90px, 0); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
         .glitch::after { left: -2px; text-shadow: -2px 0 #FF0055; clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2.5s infinite linear alternate-reverse; }
         
-        @keyframes glitch-anim {
-            0% { clip: rect(11px, 9999px, 94px, 0); transform: skew(0.65deg); }
-            5% { clip: rect(72px, 9999px, 86px, 0); transform: skew(0.1deg); }
-            10% { clip: rect(31px, 9999px, 92px, 0); transform: skew(0.25deg); }
-            15% { clip: rect(89px, 9999px, 14px, 0); transform: skew(0.3deg); }
-            20% { clip: rect(10px, 9999px, 56px, 0); transform: skew(0.9deg); }
-            100% { clip: rect(62px, 9999px, 4px, 0); transform: skew(0); }
-        }
-        @keyframes glitch-anim-2 {
-            0% { clip: rect(65px, 9999px, 100px, 0); transform: skew(0.8deg); }
-            5% { clip: rect(52px, 9999px, 74px, 0); transform: skew(0.2deg); }
-            10% { clip: rect(79px, 9999px, 85px, 0); transform: skew(0.5deg); }
-            15% { clip: rect(75px, 9999px, 5px, 0); transform: skew(0.1deg); }
-            20% { clip: rect(62px, 9999px, 20px, 0); transform: skew(0.6deg); }
-            100% { clip: rect(31px, 9999px, 12px, 0); transform: skew(0); }
-        }
+        @keyframes glitch-anim { 0% { clip: rect(11px, 9999px, 94px, 0); transform: skew(0.65deg); } 5% { clip: rect(72px, 9999px, 86px, 0); transform: skew(0.1deg); } 10% { clip: rect(31px, 9999px, 92px, 0); transform: skew(0.25deg); } 15% { clip: rect(89px, 9999px, 14px, 0); transform: skew(0.3deg); } 20% { clip: rect(10px, 9999px, 56px, 0); transform: skew(0.9deg); } 100% { clip: rect(62px, 9999px, 4px, 0); transform: skew(0); } }
+        @keyframes glitch-anim-2 { 0% { clip: rect(65px, 9999px, 100px, 0); transform: skew(0.8deg); } 5% { clip: rect(52px, 9999px, 74px, 0); transform: skew(0.2deg); } 10% { clip: rect(79px, 9999px, 85px, 0); transform: skew(0.5deg); } 15% { clip: rect(75px, 9999px, 5px, 0); transform: skew(0.1deg); } 20% { clip: rect(62px, 9999px, 20px, 0); transform: skew(0.6deg); } 100% { clip: rect(31px, 9999px, 12px, 0); transform: skew(0); } }
 
-        h2 { color: #00FFFF; text-shadow: 0 0 10px #00FFFF; margin: 0 0 15px 0; font-size: 20px; font-weight: bold; text-transform: uppercase; }
-        p { margin: 3px 0; font-size: 14px; }
+        h2 { color: #00FFFF; text-shadow: 0 0 10px #00FFFF; margin: 0 0 clamp(8px, 1.5vh, 15px) 0; font-size: clamp(14px, 3vw, 20px); font-weight: bold; text-transform: uppercase; text-align: center; }
+        p { margin: 3px 0; font-size: clamp(12px, 2.5vw, 15px); }
         
         .highlight { color: #fff; font-weight: bold; }
         .copper { color: #B87333; text-shadow: 0 0 10px #B87333; }
         
-        /* 45 DEGREE CUT BUTTONS (CYBERPUNK) */
+        /* 45 DEGREE CUT BUTTONS (FLUID) */
         button { 
             background: rgba(50, 82, 123, 0.4); color: #FDCC0D; 
             border: none; border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D;
-            padding: 12px 24px; font-family: 'Share Tech Mono', monospace; font-size: 16px; 
+            padding: clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px); 
+            font-family: 'Share Tech Mono', monospace; font-size: clamp(12px, 2.5vw, 16px); 
             cursor: pointer; text-transform: uppercase; font-weight: bold; transition: all 0.2s; 
             clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
             backdrop-filter: blur(4px); margin: 5px; box-shadow: inset 0 0 10px rgba(253, 204, 13, 0.2);
+            white-space: nowrap;
         }
-        button:hover { background: rgba(253, 204, 13, 0.2); color: #fff; box-shadow: inset 0 0 20px rgba(253, 204, 13, 0.5), 0 0 15px rgba(253, 204, 13, 0.4); border-color: #fff; }
+        button:hover, button:active { background: rgba(253, 204, 13, 0.2); color: #fff; box-shadow: inset 0 0 20px rgba(253, 204, 13, 0.5), 0 0 15px rgba(253, 204, 13, 0.4); border-color: #fff; }
 
         /* HEADER & INFO BUTTON */
-        .header-container { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; max-width: 800px; margin-bottom: 10px; }
+        .header-container { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; max-width: 800px; margin-bottom: clamp(5px, 1vh, 10px); }
         
-        #info-btn { 
-            position: absolute; right: 0; top: 15px; background: rgba(0,255,255,0.1); border-left: 2px solid #00FFFF; border-right: 2px solid #00FFFF; color: #00FFFF; 
-            padding: 8px 12px; font-size: 18px; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        #global-info-btn { 
+            position: absolute; right: 0; top: 0; background: rgba(0,255,255,0.1); border-left: 2px solid #00FFFF; border-right: 2px solid #00FFFF; color: #00FFFF; 
+            padding: clamp(5px, 1vh, 8px) clamp(10px, 2vw, 12px); font-size: clamp(14px, 3vw, 18px); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
         }
-        #info-btn:hover { background: rgba(0,255,255,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.5); }
+        #global-info-btn:hover, #global-info-btn:active { background: rgba(0,255,255,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.5); }
 
-        /* MODAL DE INFORMACIÓN */
-        #info-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 600px; background: rgba(5,5,8,0.95); border-left: 4px solid #00FFFF; border-right: 4px solid #00FFFF; padding: 25px; z-index: 1000; box-shadow: 0 0 40px rgba(0, 255, 255, 0.2); flex-direction: column; align-items: center; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
-        .instructions-content { text-align: left; margin-bottom: 20px; color: #eee; }
-        .instructions-content p { font-size: 15px; margin-bottom: 12px; line-height: 1.4; border-bottom: 1px solid rgba(50, 82, 123, 0.3); padding-bottom: 8px; }
+        /* MODAL DE INFORMACIÓN (SCALABLE) */
+        #info-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 550px; max-height: 95vh; background: rgba(5,5,8,0.95); border-left: 4px solid #00FFFF; border-right: 4px solid #00FFFF; padding: clamp(15px, 3vh, 25px); z-index: 1000; box-shadow: 0 0 40px rgba(0, 255, 255, 0.2); display: flex; flex-direction: column; align-items: center; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); overflow-y: auto; }
+        .instructions-content { text-align: left; margin-bottom: clamp(10px, 2vh, 20px); color: #eee; width: 100%; }
+        .instructions-content p { font-size: clamp(12px, 2.5vw, 15px); margin-bottom: clamp(6px, 1vh, 12px); line-height: 1.3; border-bottom: 1px solid rgba(50, 82, 123, 0.3); padding-bottom: clamp(4px, 1vh, 8px); }
         .instructions-content b { color: #FDCC0D; }
 
-        /* MENU SCREEN - GRID */
-        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
-        .marble-card { background: rgba(26, 42, 58, 0.6); border-left: 2px solid #32527B; border-right: 2px solid #32527B; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; width: 100px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+        /* MENU SCREEN - GRID (FLUID) */
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(8px, 2vw, 15px); margin-bottom: clamp(15px, 3vh, 30px); width: 100%; max-width: 400px; justify-items: center; }
+        .marble-card { background: rgba(26, 42, 58, 0.6); border-left: 2px solid #32527B; border-right: 2px solid #32527B; padding: clamp(6px, 1.5vh, 10px); text-align: center; cursor: pointer; transition: all 0.2s; width: clamp(75px, 25vw, 110px); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
         .marble-card.selected { border-color: #00FFFF; background: rgba(0, 255, 255, 0.15); box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.3); }
-        .marble-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #fff; border: 2px solid #32527B; pointer-events: none; }
-        .marble-card span { display: block; margin-top: 6px; font-size: 12px; font-weight: bold; color: #fff; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .marble-card img { width: clamp(40px, 12vw, 65px); height: clamp(40px, 12vw, 65px); border-radius: 50%; object-fit: cover; background: #fff; border: 2px solid #32527B; pointer-events: none; }
+        .marble-card span { display: block; margin-top: 6px; font-size: clamp(9px, 2vw, 12px); font-weight: bold; color: #fff; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* HUD SCREEN (IN-GAME) */
-        #hud-screen { background: transparent; justify-content: space-between; align-items: flex-start; padding: 20px; box-sizing: border-box; pointer-events: none; flex-direction: row; }
-        .panel { background: rgba(5, 5, 8, 0.8); border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D; padding: 15px; backdrop-filter: blur(6px); pointer-events: auto; min-width: 240px; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
+        .btn-container { display: flex; gap: clamp(5px, 2vw, 15px); justify-content: center; flex-wrap: wrap; width: 100%; }
+
+        /* HUD SCREEN (IN-GAME - DYNAMIC LAYOUT) */
+        #hud-screen { background: transparent; flex-direction: row; justify-content: space-between; align-items: flex-start; padding: clamp(10px, 3vw, 20px); pointer-events: none; }
+        .panel { background: rgba(5, 5, 8, 0.8); border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D; padding: clamp(10px, 2vh, 15px); backdrop-filter: blur(6px); pointer-events: auto; min-width: clamp(160px, 40vw, 240px); clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
         
-        #abort-btn { pointer-events: auto; border-color: #FF0055; color: #FF0055; background: rgba(255,0,85,0.1); margin-top: 10px; font-size: 14px; padding: 8px 16px; }
-        #abort-btn:hover { background: rgba(255,0,85,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(255, 0, 85, 0.5); border-color: #fff; }
+        /* CONTROLES DEL HUD (EL ARREGLO DEL BUG DE TOUCH) */
+        .hud-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: auto; /* ESTO HACE QUE LOS BOTONES SEAN TOCABLES SIEMPRE */ }
+        
+        #hud-info-btn { background: rgba(0,255,255,0.1); border-color: #00FFFF; color: #00FFFF; }
+        #hud-info-btn:hover, #hud-info-btn:active { background: rgba(0,255,255,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.5); }
+        #abort-btn { border-color: #FF0055; color: #FF0055; background: rgba(255,0,85,0.1); }
+        #abort-btn:hover, #abort-btn:active { background: rgba(255,0,85,0.3); color: #fff; box-shadow: inset 0 0 15px rgba(255, 0, 85, 0.5); border-color: #fff; }
 
         /* END SCREEN */
-        .stats-box { background: rgba(5, 5, 8, 0.9); border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D; padding: 25px; text-align: left; margin-bottom: 25px; font-size: 16px; width: 320px; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
-        .stats-box p { margin: 10px 0; display: flex; justify-content: space-between; border-bottom: 1px dotted #32527B; padding-bottom: 5px; }
+        .stats-box { background: rgba(5, 5, 8, 0.9); border-left: 3px solid #FDCC0D; border-right: 3px solid #FDCC0D; padding: clamp(15px, 3vh, 25px); text-align: left; margin-bottom: clamp(15px, 3vh, 25px); width: 100%; max-width: 350px; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
+        .stats-box p { margin: clamp(6px, 1.5vh, 10px) 0; display: flex; justify-content: space-between; border-bottom: 1px dotted #32527B; padding-bottom: 5px; font-size: clamp(12px, 3vw, 16px); }
         .stats-box span { font-weight: bold; }
+
+        /* ORIENTATION & COMPACT FIXES (PARA EVITAR SCROLLING EN CUALQUIER DEVICE) */
+        @media (max-width: 600px) and (orientation: portrait) {
+            #hud-screen { flex-direction: column; justify-content: space-between; align-items: stretch; }
+            .hud-controls { flex-direction: row; justify-content: space-between; width: 100%; margin-top: auto; }
+        }
+
+        @media (max-height: 450px) and (orientation: landscape) {
+            /* Modo Ultra-Compacto para celulares rotados horizontalmente */
+            .glitch { font-size: clamp(24px, 10vh, 32px); margin-bottom: 5px; }
+            h2 { font-size: clamp(12px, 5vh, 14px); margin-bottom: 5px; }
+            .grid-container { gap: 5px; margin-bottom: 10px; }
+            .marble-card { padding: 4px; }
+            .marble-card img { width: clamp(30px, 12vh, 45px); height: clamp(30px, 12vh, 45px); }
+            button { padding: 5px 12px; font-size: 11px; margin: 2px; }
+            .header-container { max-width: 90%; }
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -92,7 +107,7 @@
 <body>
 
     <div id="info-modal" class="hidden" style="display: none;">
-        <h2 style="text-align: center; margin-bottom: 15px;">MANUAL TÁCTICO</h2>
+        <h2>MANUAL TÁCTICO</h2>
         <div class="instructions-content">
             <p>1. <b>CÁMARA ORBITAL:</b> Arrastra el fondo para rotar el mapa 360º.</p>
             <p>2. <b>TIRO SLINGSHOT:</b> Clic sostenido sobre tu bolín y arrastra en dirección contraria para generar tensión.</p>
@@ -106,23 +121,23 @@
     <div id="menu-screen" class="screen">
         <div class="header-container">
             <h1 class="glitch" data-text="SGX BOLINES">SGX BOLINES</h1>
-            <button id="info-btn" onclick="toggleInfo()">[ i ]</button>
+            <button id="global-info-btn" onclick="toggleInfo()">[ i ]</button>
         </div>
         
         <h2>ESCOGE TU BOLÍN</h2>
         <div class="grid-container" id="marble-grid"></div>
         
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
-            <button onclick="Game.startGame('SOLO')" style="font-size: 16px; padding: 12px 30px;">[ INICIAR CAOS ]</button>
-            <button onclick="Game.startGame('PVP')" style="font-size: 16px; padding: 12px 30px; border-color: #B87333; color: #B87333; background: rgba(184, 115, 51, 0.1);">[ INICIAR PVP ]</button>
+        <div class="btn-container">
+            <button onclick="Game.startGame('SOLO')">[ INICIAR CAOS ]</button>
+            <button onclick="Game.startGame('PVP')" style="border-color: #B87333; color: #B87333; background: rgba(184, 115, 51, 0.1);">[ INICIAR PVP ]</button>
         </div>
     </div>
 
     <div id="hud-screen" class="screen hidden">
         <div class="panel">
-            <h1 style="font-size: 22px; text-align: left; margin-bottom: 8px;">SGX <span id="hud-mode" class="highlight">SOLO</span></h1>
-            <p style="font-size: 14px; color: #00FFFF;">ESTADO: <span id="hud-state" style="color: #fff;">ESPERANDO</span></p>
-            <hr style="border-color: #32527B; margin: 10px 0;">
+            <h1 style="font-size: clamp(16px, 4vw, 22px); text-align: left; margin-bottom: 5px;">SGX <span id="hud-mode" class="highlight">SOLO</span></h1>
+            <p style="color: #00FFFF;">ESTADO: <span id="hud-state" style="color: #fff;">ESPERANDO</span></p>
+            <hr style="border-color: #32527B; margin: 8px 0;">
             <div id="hud-solo-stats">
                 <p>TIROS: <span id="hud-shots" class="highlight">10</span></p>
                 <p>ENEMIGOS: <span id="hud-targets" style="color:#FDCC0D;">0</span></p>
@@ -133,17 +148,18 @@
                 <p>SCORE P2: <span id="hud-score-p2" class="copper">0</span></p>
             </div>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end;">
-            <button id="info-btn" onclick="toggleInfo()" style="position: relative; right: 0; top: 0; margin-bottom: 10px;">[ i ]</button>
+        
+        <div class="hud-controls">
+            <button id="hud-info-btn" onclick="toggleInfo()">[ i ] INFO</button>
             <button id="abort-btn" onclick="Game.showMenu()">⏏ ABORT</button>
         </div>
     </div>
 
     <div id="end-screen" class="screen hidden">
-        <h1 id="end-title" class="glitch" data-text="MISSION CLEARED" style="font-size: 50px;">MISSION CLEARED</h1>
-        <h2 id="end-subtitle" style="margin-bottom: 20px; color:#fff;">SIMULACIÓN COMPLETADA</h2>
+        <h1 id="end-title" class="glitch" data-text="MISSION CLEARED" style="text-align: center;">MISSION CLEARED</h1>
+        <h2 id="end-subtitle" style="color:#fff;">SIMULACIÓN COMPLETADA</h2>
         <div class="stats-box" id="stats-container"></div>
-        <div style="display: flex; gap: 15px; justify-content: center;">
+        <div class="btn-container">
             <button onclick="Game.startGame(Game.mode)">[ REINTENTAR ]</button>
             <button onclick="Game.showMenu()" style="border-color: #888; color: #888; background: rgba(136,136,136,0.1);">[ MAIN MENU ]</button>
         </div>
@@ -232,7 +248,7 @@ const grid = new THREE.GridHelper(4000, 200, SGX.Blue, 0x0a1525);
 grid.position.y = -0.5;
 scene.add(grid);
 
-// UTILIDAD PARA SPRITES DESACOPLADOS (No giran con la malla)
+// UTILIDAD SPRITES
 function makeTextSprite(message, color = '#ffffff', scale = 12) {
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
@@ -249,7 +265,7 @@ function makeTextSprite(message, color = '#ffffff', scale = 12) {
     ctx.textBaseline = 'middle';
     ctx.fillText(message, 64, 64);
     const tex = new THREE.CanvasTexture(canvas);
-    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }); // depthTest false hace que siempre se vea por encima
+    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }); 
     const sprite = new THREE.Sprite(spriteMat);
     sprite.scale.set(scale, scale, 1);
     return { sprite, tex, ctx };
@@ -297,17 +313,15 @@ class Marble {
             matConfig.color = 0xffffff; 
             matConfig.map = textureLoader.load(textureUrl);
             
-            // Etiqueta P1/P2 Desacoplada
             let lblColor = type === 'P1' ? '#FDCC0D' : '#B87333';
             this.labelData = makeTextSprite(type, lblColor, 10);
-            scene.add(this.labelData.sprite); // Se añade a la escena, no a la malla
+            scene.add(this.labelData.sprite); 
             
         } else {
             this.hp = Math.floor(Math.random() * 3) + 1;
             matConfig.color = Math.random() * 0xffffff; 
             matConfig.emissive = 0x000000; 
             
-            // Etiqueta HP Desacoplada
             this.labelData = makeTextSprite(this.hp.toString(), '#ffffff', 12);
             scene.add(this.labelData.sprite); 
         }
@@ -316,14 +330,13 @@ class Marble {
         this.mesh.position.set(x, this.radius, z);
         scene.add(this.mesh);
         
-        // Setup initial label position
         this.updateLabelPosition();
     }
 
     updateLabelPosition() {
         if(this.labelData && this.labelData.sprite) {
             this.labelData.sprite.position.x = this.mesh.position.x;
-            this.labelData.sprite.position.y = this.mesh.position.y + 7; // Flotando encima
+            this.labelData.sprite.position.y = this.mesh.position.y + 7;
             this.labelData.sprite.position.z = this.mesh.position.z;
         }
     }
@@ -366,7 +379,7 @@ class Marble {
         if(this.hp <= 0) {
             this.isDying = true;
             this.deathTimer = 90; 
-            scene.remove(this.labelData.sprite); // Elimina el número al morir
+            scene.remove(this.labelData.sprite); 
         } else {
             this.labelData.ctx.clearRect(0,0,128,128);
             this.labelData.ctx.shadowColor = "rgba(0,0,0,0.8)";
@@ -484,7 +497,7 @@ const Game = {
         
         let titleEl = document.getElementById('end-title');
         titleEl.innerText = resultObj.title;
-        titleEl.setAttribute('data-text', resultObj.title); // Para el Glitch
+        titleEl.setAttribute('data-text', resultObj.title); 
         titleEl.style.color = resultObj.color;
         titleEl.style.textShadow = `0 0 10px ${resultObj.color}`;
         
