@@ -110,7 +110,7 @@
 
         .hud-controls { position: absolute; top: clamp(10px, 2.5vw, 20px); right: clamp(10px, 2.5vw, 20px); display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: auto; }
 
-        #hint { position: absolute; left: 50%; bottom: clamp(18px, 5vh, 46px); transform: translateX(-50%); color: #cfe; font-size: clamp(11px, 2.5vw, 14px); letter-spacing: 2px; text-align: center; background: rgba(5,5,8,0.6); padding: 8px 14px; border-left: 2px solid var(--cyan); border-right: 2px solid var(--cyan); white-space: nowrap; animation: hint-pulse 1.6s ease-in-out infinite; }
+        #hint { position: absolute; left: 50%; bottom: clamp(18px, 5vh, 46px); transform: translateX(-50%); color: #cfe; font-size: clamp(11px, 2.5vw, 14px); letter-spacing: 2px; text-align: center; background: rgba(5,5,8,0.6); padding: 8px 14px; border-left: 2px solid var(--cyan); border-right: 2px solid var(--cyan); width: max-content; max-width: calc(100vw - 32px); animation: hint-pulse 1.6s ease-in-out infinite; }
         @keyframes hint-pulse { 50% { opacity: 0.55; } }
 
         #power { position: absolute; left: 50%; bottom: clamp(18px, 5vh, 46px); transform: translateX(-50%); width: min(360px, 70vw); }
@@ -1521,8 +1521,9 @@ stage.addEventListener('contextmenu', (e) => { e.preventDefault(); if (Aim.activ
 const camTween = { t: 1, from: new THREE.Vector3(), to: new THREE.Vector3() };
 function homePosition() {
     const a = window.innerWidth / window.innerHeight;
-    const dist = a >= 1.2 ? 305 : Math.min(640, 305 * Math.pow(1.2 / a, 0.9));
-    return new THREE.Vector3(0, dist * 0.8, dist * 0.6);
+    const dist = a >= 1.2 ? 305 : Math.min(600, 305 * Math.pow(1.2 / a, 0.8));
+    // En vertical, cámara más cenital para aprovechar el alto de pantalla
+    return a >= 1 ? new THREE.Vector3(0, dist * 0.8, dist * 0.6) : new THREE.Vector3(0, dist * 0.93, dist * 0.37);
 }
 function cameraHome(instant) {
     controls.target.set(0, 0, 8);
